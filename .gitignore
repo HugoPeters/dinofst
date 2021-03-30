@@ -1,0 +1,7 @@
+Intermediate/
+VisualStudio/
+Binaries/
+*.user
+/imgui.ini
+/buildinfo
+/GenerateProjectFiles.bat

@@ -1,0 +1,3 @@
+[submodule "Source/ELFIO"]
+	path = Source/ELFIO
+	url = ../ELFIO
