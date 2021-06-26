@@ -1,7 +1,7 @@
 SET warlockDir=%WARLOCK%
 
-SET buildToolExe=%warlockDir%\BuildTool\bin\Release\HEv3-BuildTool.exe
+SET buildToolExe=%warlockDir%\WarBuild\warbuild.bat
 
-call "%buildToolExe%" RegisterExtModule %warlockDir% %~dp0
+call "%buildToolExe%" RegisterExtModule -root "%warlockDir%" %~dp0
 
 pause
