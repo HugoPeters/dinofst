@@ -1,19 +1,23 @@
 #ifndef _Formats_h_
 #define _Formats_h_
 
+#include "C_String.h"
+
 class FSTContext;
 
 typedef bool(*FSTHandleFunc)(FSTContext* aCtx);
 
 struct FormatInfo
 {
-    FormatInfo(FSTHandleFunc aExportFunc, FSTHandleFunc aCompileFunc)
+    FormatInfo(FSTHandleFunc aExportFunc, FSTHandleFunc aCompileFunc, const char* aName)
         : mExportFunc(aExportFunc)
         , mCompileFunc(aCompileFunc)
+        , mName(aName)
     {}
 
     FSTHandleFunc mExportFunc;
     FSTHandleFunc mCompileFunc;
+    C_String mName;
 };
 
 namespace Formats
@@ -42,6 +46,9 @@ namespace Formats
         //MAPS,
         //MAPSETUP,
         //MODANIM,
+        //MPEG,
+        MODELS,
+		MODELIND,
 
         NUM_FMTS
     };

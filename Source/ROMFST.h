@@ -2,6 +2,8 @@
 #define _ROMFST_h_
 
 #include "C_FilePath.h"
+#include "C_Vector.h"
+#include "C_Math.h"
 
 class C_Stream;
 class C_DataPack;
@@ -102,6 +104,31 @@ namespace ROMFST
     bool InjectFST(const char* aRomPath, const char* aInPath, const char* aOutPath);
 
     bool CompileROM(const char* aRomPath, const char* aInPath, const char* aOutPath);
+
+	struct FSTInfo
+	{
+		uint32 mContentOffset = 0;
+		C_Vector<uint32> mFileOffsets;
+
+		static uint32 GetFSTOffset();
+
+		void InitDefault();
+		void FileOffsetsFinalize();
+
+		uint32 GetSizeFull() const;
+
+		int NumFiles() const { return C_Max(0, mFileOffsets.Count() - 1); }
+
+		uint32 GetAbsoluteFileOffset(int idx) const;
+		uint32 GetFileSize(int idx) const;
+
+		bool Read(C_Stream& handle);
+		bool ReadROM(C_Stream& handle);
+		C_Strfmt<64> GetFileName(int idx) const;
+
+		void WriteJson(const char* aOutPath);
+		void Write(C_Stream& handle);
+	};
 };
 
 class FSTContext
@@ -121,7 +148,7 @@ public:
     virtual void MarkFileHandled(int aFileType) { mHandledFlags[aFileType] = true; }
     virtual C_Stream& GetFileStream(ROMFST::File aFile) = 0;
 
-    string mDefsPath;
+    C_String mDefsPath;
 
 protected:
     C_FilePath mBaseDir;

@@ -18,12 +18,24 @@ namespace FormatsInternal
     bool ExportMAPINFO(FSTContext*);
     bool CompileMAPINFO(FSTContext*);
 
+    bool ExportMPEG(FSTContext*);
+    bool CompileMPEG(FSTContext*);
+
+	bool ExportMODELS(FSTContext*);
+	bool CompileMODELS(FSTContext*);
+
+	bool ExportMODELIND(FSTContext*);
+	bool CompileMODELIND(FSTContext*);
+
     static const FormatInfo sFormats[Formats::NUM_FMTS] =
     {
-        { ExportDLLs, CompileDLLs },
-        { ExportDLLSIMPORTTAB, CompileDLLSIMPORTTAB },
-        { ExportGlobalMap, CompileGlobalMap },
-        { ExportMAPINFO, CompileMAPINFO }
+        { ExportDLLs, CompileDLLs, "DLLS" },
+        { ExportDLLSIMPORTTAB, CompileDLLSIMPORTTAB, "DLLSIMPORTTAB" },
+        { ExportGlobalMap, CompileGlobalMap, "GLOBALMAP" },
+        { ExportMAPINFO, CompileMAPINFO, "MAPINFO" },
+		{ ExportMODELS, CompileMODELS, "MODELS" },
+		{ ExportMODELIND, CompileMODELIND, "MODELIND" },
+		//{ ExportMPEG, CompileMPEG, "MPEG" }
     };
 }
 

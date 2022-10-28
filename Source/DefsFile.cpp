@@ -105,7 +105,7 @@ void DefsFile::TryAnnotate(uint32 aAddr, const char* aDesc)
 
 void DefsFile::Write(const char* fpath)
 {
-    string defs;
+    C_String defs;
 
     for (Entry& e : mEntries)
     {

@@ -132,10 +132,10 @@ struct CommandArgs
 
 
     Mode mMode = MODE_DUMP_BIN;
-    string mRomPath;
-    string mOutPath;
-    string mInPath;
-    string mDefsPath;
+    C_String mRomPath;
+    C_String mOutPath;
+    C_String mInPath;
+    C_String mDefsPath;
 };
 
 // minimal runtime
@@ -158,7 +158,7 @@ int main(int argc, char** argv)
     {
         WAR_LOG_INFO(CAT_GENERAL, "Printing usage\n\n");
 
-        string help;
+        C_String help;
         help.append("usage: dpfst [mode] [options]\n");
         help.append("Modes:\n");
         help.append("-dump_bin: extract raw fst.bin from rom. options:\n");

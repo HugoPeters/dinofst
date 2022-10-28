@@ -8,6 +8,7 @@
 #include "Formats.h"
 #include "C_OS.h"
 #include "n64crc.h"
+#include "C_Math.h"
 
 #define ROM_FST_OFFSET 0xA4970
 
@@ -96,107 +97,11 @@ namespace ROMFST_private
         { "ENVFXACT.bin" }
     };
 
-    struct FSTInfo
-    {
-        uint32 mContentOffset = 0;
-        C_Vector<uint32> mFileOffsets;
-
-        void InitDefault()
-        {
-            mFileOffsets.Resize(ROMFST::NUM_FILES + 1);
-        }
-
-        void FileOffsetsFinalize()
-        {
-            uint32 hdrSize = 4 + (mFileOffsets.Count() * 4);
-
-            for (int i = 0; i < mFileOffsets.Count(); ++i)
-            {
-                mFileOffsets[i] = mFileOffsets[i] - hdrSize;
-            }
-        }
-
-        uint32 GetSizeFull() const
-        {
-            uint32 size = mFileOffsets.Count() * 4;
-            size += mFileOffsets[mFileOffsets.Count() - 1];
-            return size;
-        }
-
-        int NumFiles() const { return C_Max(0, mFileOffsets.Count() - 1); }
-
-        uint32 GetAbsoluteFileOffset(int idx) const
-        {
-            return mContentOffset + mFileOffsets[idx];
-        }
-
-        uint32 GetFileSize(int idx) const
-        {
-            return mFileOffsets[idx + 1] - mFileOffsets[idx];
-        }
-
-        bool Read(C_Stream& handle)
-        {
-            mFileOffsets.Clear();
-
-            int numFiles;
-            handle >> numFiles;
-
-            if (numFiles <= 0 || numFiles > 0xFFF)
-            {
-                WAR_LOG_WARNING(CAT_GENERAL, "Insane number of files in FST: %i, stopping", numFiles);
-                return false;
-            }
-
-            if (numFiles != ROMFST::NUM_FILES)
-            {
-                WAR_LOG_WARNING(CAT_GENERAL, "Unexpected number of files in FST: %i, expected %i", numFiles, ROMFST::NUM_FILES);
-            }
-
-            handle.ReadArray(mFileOffsets, numFiles + 1); // +1 for FST size
-
-            mContentOffset = handle.GetPosition();
-        }
-
-        bool ReadROM(C_Stream& handle)
-        {
-            handle.Seek(C_FileSystem::SeekSet, ROM_FST_OFFSET);
-            return Read(handle);
-        }
-
-        C_Strfmt<64> GetFileName(int idx) const
-        {
-            const FileInfo* finfo = (idx < ROMFST::NUM_FILES) ? &sFileInfo[idx] : NULL;
-
-            C_Strfmt<64> fileName;
-
-            if (finfo)
-                fileName.Format("%s", finfo->mName);
-            else
-                fileName.Format("UNKFILE_%i.bin", idx);
-
-            return fileName;
-        }
-
-        void WriteJson(const char* aOutPath)
-        {
-            C_DataPack pack;
-
-            pack.ToFileJson(aOutPath);
-        }
-
-        void Write(C_Stream& handle)
-        {
-            handle << uint32(mFileOffsets.Count() - 1);
-            handle.WriteArray(mFileOffsets.GetBuffer(), mFileOffsets.Count());
-        }
-    };
-
     struct FSTLegend
     {
-        C_Vector<string> mFileNames;
+        C_Vector<C_String> mFileNames;
 
-        void FromFSTInfo(const FSTInfo& aInfo)
+        void FromFSTInfo(const ROMFST::FSTInfo& aInfo)
         {
             for (int i = 0; i < aInfo.mFileOffsets.Count() - 1; ++i)
             {
@@ -244,7 +149,7 @@ namespace ROMFST_private
 
         CachedFile mStreams[ROMFST::NUM_FILES];
         C_Stream* mFileStream = NULL;
-        const FSTInfo* mFstInfo = NULL;
+        const ROMFST::FSTInfo* mFstInfo = NULL;
     };
 
     class FSTWriteContext : public FSTContext
@@ -381,9 +286,13 @@ bool ROMFST::ExtractFiles(const char* aInPath, const char* aOutDir, const char* 
     {
         const FormatInfo& fmtInfo = Formats::GetFormatInfo(i);
 
+        printf("%s...\n", fmtInfo.mName.c_str());
+
         if (!fmtInfo.mExportFunc(&ctx))
             return false;
     }
+
+    printf("Misc...\n");
 
     // export unhandled files as raw files
     C_Ptr<C_MemBlock> buffer = WAR_MemBlockAlloc(info.GetSizeFull());
@@ -429,9 +338,13 @@ bool ROMFST::CompileFiles(const char* aInPath, const char* aOutDir)
     {
         const FormatInfo& fmtInfo = Formats::GetFormatInfo(i);
 
+        printf("%s...\n", fmtInfo.mName.c_str());
+
         if (!fmtInfo.mCompileFunc(&ctx))
             return false;
     }
+
+    printf("Misc...\n");
 
     for (int i = 0; i < ROMFST::NUM_FILES; ++i)
     {
@@ -602,4 +515,101 @@ void FSTContext::FixFilePath(const char* aRelFileName, C_FilePath& aOut)
     C_FileSystem::DirectoryCreate(dirPath);
 
     aOut = fullPath;
+}
+
+uint32 ROMFST::FSTInfo::GetFSTOffset()
+{
+	return ROM_FST_OFFSET;
+}
+
+void ROMFST::FSTInfo::InitDefault()
+{
+	mFileOffsets.Resize(ROMFST::NUM_FILES + 1);
+}
+
+void ROMFST::FSTInfo::FileOffsetsFinalize()
+{
+	uint32 hdrSize = 4 + (mFileOffsets.Count() * 4);
+
+	for (int i = 0; i < mFileOffsets.Count(); ++i)
+	{
+		mFileOffsets[i] = mFileOffsets[i] - hdrSize;
+	}
+}
+
+uint32 ROMFST::FSTInfo::GetSizeFull() const
+{
+	uint32 size = mFileOffsets.Count() * 4;
+	size += mFileOffsets[mFileOffsets.Count() - 1];
+	return size;
+}
+
+uint32 ROMFST::FSTInfo::GetAbsoluteFileOffset(int idx) const
+{
+	return mContentOffset + mFileOffsets[idx];
+}
+
+uint32 ROMFST::FSTInfo::GetFileSize(int idx) const
+{
+	return mFileOffsets[idx + 1] - mFileOffsets[idx];
+}
+
+bool ROMFST::FSTInfo::Read(C_Stream& handle)
+{
+	mFileOffsets.Clear();
+
+	int numFiles;
+	handle >> numFiles;
+
+	if (numFiles <= 0 || numFiles > 0xFFF)
+	{
+		WAR_LOG_WARNING(CAT_GENERAL, "Insane number of files in FST: %i, stopping", numFiles);
+		return false;
+	}
+
+	if (numFiles != ROMFST::NUM_FILES)
+	{
+		WAR_LOG_WARNING(CAT_GENERAL, "Unexpected number of files in FST: %i, expected %i", numFiles, ROMFST::NUM_FILES);
+	}
+
+	handle.ReadArray(mFileOffsets, numFiles + 1); // +1 for FST size
+
+	mContentOffset = handle.GetPosition();
+}
+
+bool ROMFST::FSTInfo::ReadROM(C_Stream& handle)
+{
+	handle.Seek(C_FileSystem::SeekSet, ROM_FST_OFFSET);
+	return Read(handle);
+}
+
+C_Strfmt<64> ROMFST::FSTInfo::GetFileName(int idx) const
+{
+	using namespace ROMFST_private;
+
+	const FileInfo* finfo = (idx < ROMFST::NUM_FILES) ? &sFileInfo[idx] : NULL;
+
+	C_Strfmt<64> fileName;
+
+	if (finfo)
+		fileName.Format("%s", finfo->mName);
+	else
+		fileName.Format("UNKFILE_%i.bin", idx);
+
+	return fileName;
+}
+
+void ROMFST::FSTInfo::WriteJson(const char* aOutPath)
+{
+	C_DataPack pack;
+
+	pack.ToFileJson(aOutPath);
+}
+
+void ROMFST::FSTInfo::Write(C_Stream& handle)
+{
+	using namespace ROMFST_private;
+
+	handle << uint32(mFileOffsets.Count() - 1);
+	handle.WriteArray(mFileOffsets.GetBuffer(), mFileOffsets.Count());
 }

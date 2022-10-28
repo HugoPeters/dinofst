@@ -13,7 +13,7 @@ namespace FormatsInternal
     struct DLLNameMapping
     {
         int mId;
-        string mName;
+        C_String mName;
     };
 
     static const char* sBankNames[] =
@@ -175,7 +175,7 @@ namespace FormatsInternal
 
     struct DllWriteEntry
     {
-        string mFileName;
+        C_String mFileName;
         uint32 mBssSize = 0;
         uint32 mBank = 0;
         uint32 mLocalId = 0;
@@ -187,7 +187,7 @@ namespace FormatsInternal
         C_FilePath dirPath = aCtx->GetBaseDir();
         dirPath.Combine("DLLS");
 
-        std::vector<string> dllFiles;
+        C_Vector<C_String> dllFiles;
         if (!C_FileSystem::GetFilesInDirectory(dirPath, dllFiles))
             return false;
 
@@ -207,7 +207,7 @@ namespace FormatsInternal
 
         C_Vector<DllWriteEntry> dllEntries;
 
-        for (int i = 0; i < int(dllFiles.size()); ++i)
+        for (int i = 0; i < dllFiles.Count(); ++i)
         {
             if (C_StringUtils::EndsWith(".dll", dllFiles[i].c_str()) == false)
                 continue;

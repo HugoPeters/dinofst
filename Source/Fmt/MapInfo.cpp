@@ -6,7 +6,7 @@ namespace FormatsInternal
 {
     struct MapInfoEntry
     {
-        string mName;
+        C_String mName;
         uint8 mMapType = 0;
         uint8 mUnk0 = 0x45;
         uint16 mUnk1 = 0;

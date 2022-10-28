@@ -2,6 +2,7 @@
 #define _DefsFile_h_
 
 #include "C_Vector.h"
+#include "C_String.h"
 
 class C_Stream;
 
@@ -11,7 +12,7 @@ struct DefsFile
     {
         uint32 mAddr;
         uint32 mNameHash = 0;
-        string mName;
+        C_String mName;
     };
 
     bool Read(const char* fpath);

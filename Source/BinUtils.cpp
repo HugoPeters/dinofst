@@ -26,7 +26,7 @@ void BinUtils::ReadOffsets32(C_Stream& aHandle, C_Vector<int32>& aOut, int aStri
     BinUtils_private::ReadOffsets<int32>(aHandle, aOut, aStride);
 }
 
-void BinUtils::SplitFile(C_Stream& aHandle, C_Vector<int32>& aOffsetsAndEndSize, const function<void(int, C_FilePath&)>& aFmtFilenameFunc, const function<void(int, C_Stream&)>& aEndWriteFunc)
+void BinUtils::SplitFile(C_Stream& aHandle, C_Vector<int32>& aOffsetsAndEndSize, const std::function<void(int, C_FilePath&)>& aFmtFilenameFunc, const std::function<void(int, C_Stream&)>& aEndWriteFunc)
 {
     C_FilePath pathBuff;
 
@@ -53,7 +53,8 @@ void BinUtils::SplitFile(C_Stream& aHandle, C_Vector<int32>& aOffsetsAndEndSize,
         ostrm.SetEndianSwap(true);
         ostrm.WriteBytes(buffer->mBlock, size);
 
-        aEndWriteFunc(i, ostrm);
+        if (aEndWriteFunc)
+            aEndWriteFunc(i, ostrm);
 
         C_FileSystem::Close(ohandle);
     }

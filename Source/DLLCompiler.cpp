@@ -6,6 +6,7 @@
 #include "C_FilePath.h"
 #include "C_MemBlock.h"
 #include "C_Utils.h"
+#include "C_Math.h"
 
 #include "mips_def.h"
 #include "DefsFile.h"
@@ -20,7 +21,7 @@ namespace DLLCompiler_private
     {
         struct Section
         {
-            string mName;
+            C_String mName;
             uint32 mVirtualAddr = 0;
             uint32 mPhysicalAddr = 0;
             uint32 mSize = 0;
@@ -345,7 +346,7 @@ namespace DLLCompiler_private
 
     struct ElfSymbol
     {
-        std::string         name;
+        C_String         name;
         ELFIO::Elf64_Addr   value;
         ELFIO::Elf_Xword    size;
         unsigned char       bind;
@@ -408,7 +409,7 @@ namespace DLLCompiler_private
             mIsRequired = aRequired;
         }
 
-        string mName;
+        C_String mName;
         uint32 mNameHash;
         bool mIsRequired;
     };
